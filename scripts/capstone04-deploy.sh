@@ -52,7 +52,7 @@ fetch_release() {
   log "Pinned upstream source: $SOURCE_SHA"
 }
 
-with_release() {
+with_release() (
   local action="$1"
   local tmp
   tmp="$(mktemp)" || die "Unable to create temporary artifact"
@@ -78,7 +78,7 @@ with_release() {
   kubectl --context "$CTX" --namespace "$NS" apply --validate=strict -f "$tmp"
   log "Deployment submitted; check rollout and resource capacity before claiming success"
   kubectl --context "$CTX" --namespace "$NS" get deployments,pods,services
-}
+)
 
 status() {
   check_target
