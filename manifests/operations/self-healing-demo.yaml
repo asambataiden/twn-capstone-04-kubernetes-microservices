@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cap04-self-healing-demo
+  namespace: online-shop
+  labels:
+    app: cap04-self-healing-demo
+    project: twn-capstone04
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cap04-self-healing-demo
+  template:
+    metadata:
+      labels:
+        app: cap04-self-healing-demo
+        project: twn-capstone04
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.10
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
