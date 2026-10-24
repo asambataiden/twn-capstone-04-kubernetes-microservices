@@ -188,3 +188,17 @@ kubectl --context k3d-twn-capstone04 -n online-boutique get pods -l app=cartserv
 ```
 
 Do not retag images, force amd64 node emulation, switch Redis versions or disable health probes until these checks explain the behavior. Any fix must be committed as a reproducible, scoped configuration change and retested against frontend/cart/loadgenerator.
+
+## Confirmed container architecture mismatch — 24 October 2026
+
+Operator verified the Kubernetes node reports `linux/arm64` and the source-pinned `gcr.io/google-samples/microservices-demo/cartservice:v0.8.0` image reports `linux/amd64` using:
+
+```bash
+docker buildx imagetools inspect --format '{{json .Image}}' \
+  gcr.io/google-samples/microservices-demo/cartservice:v0.8.0 \
+  | jq -r '"\\(.os)/\\(.architecture)"'
+```
+
+This confirms the image/node mismatch. It is a strong explanation for `.NET` instability under architecture emulation, **but does not uniquely prove the origin of the managed and native runtime faults**. The cart container had prior termination code 133 and multiple restarts.
+
+**Controlled resolution plan:** inspect a candidate upstream ARM64 cart-service image such as v0.10.3 (upstream release notes report ARM64 support), pin its immutable digest only after validation, assess cross-version protobuf/gRPC compatibility with remaining v0.8.0 services, then apply a separately versioned, narrowly scoped overlay. No runtime image change has been made yet. If no compatible image exists, consider a reproducible native ARM64 build using the existing source/contract instead of replacing the whole stack.
