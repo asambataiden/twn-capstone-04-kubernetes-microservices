@@ -108,3 +108,27 @@ kubectl --context k3d-twn-capstone04 -n online-boutique get events --sort-by=.la
 ```
 
 The deploy script asks for exact interactive confirmation. These commands must only target the dedicated local context. Wait for actual rollout status before asserting deployment success.
+
+## First real deployment — operator evidence (24 October 2026)
+
+**Executed, not yet acceptance-tested:** The operator ran `bash scripts/capstone04-deploy.sh deploy`, confirmed the exact `k3d-twn-capstone04/online-boutique` target, passed server-side dry-run validation and successfully submitted all 24 upstream Kubernetes resources: **12 Deployments and 12 Services**.
+
+Evidence recorded in terminal output:
+- All Deployments were created using existing images; application image references were `gcr.io/google-samples/microservices-demo/*:v0.8.0`, with `redis:alpine` for Redis.
+- At approximately 26 seconds after the first application submission, **emailservice** was `1/1`; other Deployments had not yet reported readiness.
+- `ContainerCreating` and `Init:0/1` states were present during startup and image pulls. Several images were successfully pulled.
+- Initial readiness/liveness connection timeouts occurred for `emailservice`, `productcatalogservice` and `recommendationservice`. At this early point they are not evidence of a persistent application failure.
+- The node metrics snapshot after deployment showed **452m CPU** and **1520 MiB memory (19%)**. These were startup measurements, not validated peak usage.
+- `frontend-external` was initially a `LoadBalancer` service with an external address **pending**. For local inspection, the internal `frontend` service plus `kubectl port-forward` is preferred.
+- A manual command used `--context twn-capstone04` (missing `k3d-`) and correctly failed; use exactly `--context k3d-twn-capstone04`. This did not impact the script's scoped deployment.
+
+**Next acceptance gate:**
+
+```bash
+kubectl --context k3d-twn-capstone04 -n online-boutique get deployments,pods,services -o wide
+kubectl --context k3d-twn-capstone04 -n online-boutique rollout status deployment/frontend --timeout=180s
+kubectl --context k3d-twn-capstone04 -n online-boutique get events --field-selector type=Warning --sort-by=.lastTimestamp
+kubectl --context k3d-twn-capstone04 top nodes
+```
+
+Only once relevant Deployments are available should the operator test port-forward, browser product browsing, cart and simulated checkout. Record actual results rather than inferring success from resource creation.
