@@ -189,3 +189,30 @@ kubectl --context "k3d-$CLUSTER_NAME" get nodes -o wide
 **Safety rule:** Always include `--context k3d-twn-capstone04` in subsequent `kubectl` commands until the current-context state has been deliberately verified. The `k3d cluster create` operation may change the current kubeconfig context, so verify again after creating the cluster. Creating this cluster does not affect or delete other clusters; it consumes local Docker resources.
 
 **Open:** Official TWN assignment, disk headroom and full Online Boutique memory capacity must be checked before applying application manifests. Source images may have architecture compatibility constraints on arm64; verify image manifests before deployment.
+
+## Repeatable automation (CAP04-002)
+
+The repository now includes [`scripts/capstone04-cluster.sh`](../scripts/capstone04-cluster.sh), a Bash-only operator script with explicit subcommands and strict error handling **inside the subprocess**, rather than modifying the interactive Zsh session.
+
+```bash
+bash scripts/capstone04-cluster.sh preflight
+bash scripts/capstone04-cluster.sh verify
+bash scripts/capstone04-cluster.sh namespace
+bash scripts/capstone04-cluster.sh status
+```
+
+For a fresh rebuild, `bash scripts/capstone04-cluster.sh create` is idempotent with respect to an already existing named cluster. When starting a new environment, confirm you intend to create `twn-capstone04`. The script never deploys the application.
+
+The `destroy` subcommand requires an exact interactive confirmation and deletes only the dedicated cluster by its name. It is **not** part of ordinary deployment or validation and should only be run after evidence has been saved.
+
+### Operator notes
+
+- The lab cluster was **already created by the operator** using k3d and the node was reported `Ready` on Kubernetes v1.33.6+k3s1.
+- `kube-system` workload output included CoreDNS, metrics-server, local storage provisioner and Traefik; the latter was still starting during the first check.
+- The active kubeconfig context was confirmed as `k3d-twn-capstone04` after cluster creation, but all scripted `kubectl` calls continue to supply an explicit context.
+- A global `set -euo pipefail` should **not** be pasted into interactive Zsh: run the versioned Bash script as shown.
+- Do not paste a shell shebang into interactive Zsh. Zsh may also need `setopt INTERACTIVE_COMMENTS` before accepting comment-only lines pasted interactively.
+
+### Validation needed for script completion
+
+Run `bash -n scripts/capstone04-cluster.sh` and, if available, `shellcheck scripts/capstone04-cluster.sh`. Then run preflight, verify and namespace subcommands on the dedicated cluster and capture outputs. No user-machine execution is claimed from this GitHub commit.
