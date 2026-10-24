@@ -167,3 +167,24 @@ kubectl --context k3d-twn-capstone04 -n online-boutique \
 In another terminal run `curl -i http://127.0.0.1:18080/` and open the same URL in a browser. Confirm the port-forward displays `Forwarding from 127.0.0.1:18080` before attributing a response to the frontend.
 
 **Acceptance remains pending** until the load generator's init failure is explained/resolved and the shopping workflow is exercised; do not tune probe timings or change replicas without diagnostic evidence.
+
+## Incident follow-up: frontend HTTP 500 / cartservice crash
+
+Operator findings:
+- `cartservice` observed in `CrashLoopBackOff` (five restarts) while `redis-cart` was Running without restarts.
+- Previous cartservice logs show `.NET` service startup and health messages, then `System.NullReferenceException` executing `GetCart` and fatal `System.AccessViolationException`. The service is not healthy merely because it temporarily reports Ready.
+- Redis output shows version 8.10.2 startup, module initialization and `Ready to accept connections tcp`; it also warns that Redis has no authentication and is not protected by network restrictions (acceptable only as a confined local demo, not production hardening).
+- Redis and cartservice EndpointSlice objects exist; the presence of an endpoint alone is not proof that its backing application answers requests.
+- Local frontend returned HTTP 500; loadgenerator `frontend-check` retrieved that same status and exited with code 1.
+- **Proposed investigation:** verify actual node/pulled image architecture and container termination reason. A compatibility issue under Apple Silicon/amd64 emulation is plausible, not proven. Application fault and runtime/library mismatch remain possibilities.
+
+### Read-only diagnostic gate
+
+```bash
+kubectl --context k3d-twn-capstone04 get node -o custom-columns=NAME:.metadata.name,ARCH:.status.nodeInfo.architecture,OS:.status.nodeInfo.operatingSystem
+docker buildx imagetools inspect gcr.io/google-samples/microservices-demo/cartservice:v0.8.0
+kubectl --context k3d-twn-capstone04 -n online-boutique describe pod -l app=cartservice
+kubectl --context k3d-twn-capstone04 -n online-boutique get pods -l app=cartservice -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range .status.containerStatuses[*]}{.name}{": "}{.lastState.terminated.reason}{" exit="}{.lastState.terminated.exitCode}{"\n"}{end}{end}'
+```
+
+Do not retag images, force amd64 node emulation, switch Redis versions or disable health probes until these checks explain the behavior. Any fix must be committed as a reproducible, scoped configuration change and retested against frontend/cart/loadgenerator.
