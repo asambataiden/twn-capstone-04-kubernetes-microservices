@@ -4,7 +4,7 @@
 **Application:** Online Boutique (reference release v0.8.0)  
 **Repository:** https://github.com/asambataiden/twn-capstone-04-kubernetes-microservices  
 **Report date:** 24 October 2026  
-**Status:** Engineering portfolio documentation complete; **official TWN assessment/submission requirements not verified**.
+**Status:** **Engineering portfolio CLOSED**; actual TWN Module 10 checklist reviewed and deviations documented; **official course acceptance and digital badge remain unverified**.
 
 ## 1. Executive summary
 
@@ -128,8 +128,8 @@ The reference source is `asambataiden/twn-devops-bootcamp-10-kubernetes-deployin
 - [x] Existing EKS Pods and images rechecked following live Adservice repair.
 - [x] Self-healing, update/rollback and demo cleanup recorded.
 - [x] Incident and remaining risks included rather than masked.
-- [ ] Official TWN project requirements compared against the delivered work.
+- [x] Actual TWN Module 10 checklist, including Lesson 22, compared against delivered work; gaps recorded in `docs/module10-official-checklist-gap-analysis.md`.
 - [ ] Any required instructor screenshots, video or course-portal submission completed.
 - [ ] Official course acceptance or digital badge confirmed.
 
-**Submission statement:** This report is suitable as an engineering portfolio narrative and a *draft* for course submission. It must not be represented as approved by TechWorld with Nana until the course assessment is completed.
+**Closeout statement:** CAP04 is closed **as an engineering portfolio project**, with observed successes and limitations retained. This report can support an official course submission but is **not proof** of instructor acceptance or award of the digital badge.
