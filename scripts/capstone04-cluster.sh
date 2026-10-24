@@ -34,7 +34,12 @@ cluster_exists() {
 }
 
 require_context() {
-  kubectl config get-contexts -o name | grep -Fxq -- "$CONTEXT" \
+  local contexts
+  contexts="$(kubectl config get-contexts -o name)" \
+    || die "Unable to read kubeconfig contexts"
+  # Avoid grep -q on a live pipe: under pipefail an early grep exit can
+  # SIGPIPE kubectl, falsely reporting an existing context as missing.
+  grep -Fxq -- "$CONTEXT" <<< "$contexts" \
     || die "Expected kubeconfig context '$CONTEXT' does not exist"
 }
 
