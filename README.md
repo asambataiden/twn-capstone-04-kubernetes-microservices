@@ -1,6 +1,6 @@
 # TWN Capstone 04 — Deploy Microservices Application in Kubernetes
 
-**Status (24 October 2026):** CAP04-001–004 merged; CAP04-005 portfolio documentation in review. Existing EKS application tests passed, but declarative EKS reproducibility and official TWN assessment remain unverified.
+**Status (24 October 2026):** **Engineering portfolio CLOSED** — CAP04-001–005 and follow-up documentation merged. Existing EKS application tests passed. Documented TWN checklist deviations, unverified EKS declarative reproducibility and official TWN acceptance remain open outside this portfolio closeout.
 
 ## Goal
 
@@ -22,6 +22,8 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 | [Final submission report](docs/final-submission-report.md) | Consolidated project narrative, acceptance evidence, limitations and submission checklist |
 | [TWN submission readiness](docs/twn-submission-readiness.md) | Public course criteria, Git project evidence and course portal verification gates |
 | [Official Module 10 checklist gap analysis](docs/module10-official-checklist-gap-analysis.md) | Checklist-sourced Lesson 22–25 comparison, identified gaps and safe follow-ups |
+| [Lesson 23 EKS configuration audit](docs/lesson23-live-eks-audit.md) | Read-only probe, resource, replica and Service findings; distinct from CAP04 scope |
+| [CAP04 portfolio closure](docs/capstone04-closure.md) | Final disposition, scope limits, and transition to the next TWN exercise |
 | [Portfolio acceptance evidence](docs/portfolio-evidence.md) | Acceptance matrix with passed, failed and unresolved checks |
 | [Lessons learned and open follow-ups](docs/lessons-learned.md) | Architecture compatibility, ownership, incident findings and remaining limitations |
 | [Kubernetes self-healing](docs/operations-self-healing.md) | Disposable Pod replacement exercise and cleanup |
