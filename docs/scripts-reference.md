@@ -3,7 +3,7 @@
 **Project:** TechWorld with Nana (TWN) DevOps Bootcamp — Capstone 04  
 **Verified against:** scripts on `main` as of 24 October 2026  
 **Audience:** DevOps learners and reviewers operating the local lab or inspecting the existing EKS deployment  
-**Scope:** Three tracked Bash scripts; two supporting Kubernetes manifests. This is a description of the **implemented commands**, not a proposal to add automation.
+**Scope:** Four tracked Bash scripts (one historical bootstrap, three active cluster/application/evidence scripts); two supporting Kubernetes manifests. This is a description of the **implemented commands**, not a proposal to add automation.
 
 > **Critical separation:** The local k3d cluster (`k3d-twn-capstone04` / `online-boutique`) and the already-existing AWS EKS cluster (`floral-mongoose-1792497995` / `online-shop`) are independent. The local deploy script **cannot deploy to EKS**; the EKS evidence script **does not deploy anything**.
 
@@ -11,11 +11,12 @@
 
 | Script | Milestone | Target | Responsibility | Mutating commands |
 |---|---|---|---|---|
+| [`bootstrap-github.sh`](../scripts/bootstrap-github.sh) | CAP04-001 | Local Git + GitHub | One-time new private repository creation and architecture-baseline PR | **All stages mutate Git/GitHub**; historical only |
 | [`capstone04-cluster.sh`](../scripts/capstone04-cluster.sh) | CAP04-002 | Local k3d only | Create, inspect and remove isolated Kubernetes lab | `create`, `namespace`, `destroy` |
 | [`capstone04-deploy.sh`](../scripts/capstone04-deploy.sh) | CAP04-003 | Local k3d only | Fetch fixed upstream release, server-validate and optionally apply Online Boutique | `deploy` |
 | [`capstone04-eks-evidence.sh`](../scripts/capstone04-eks-evidence.sh) | CAP04-003 evidence | Existing AWS EKS only | Verify expected cluster, report nodes, Deployment images, Pod status and frontend exposure | **None** |
 
-All three scripts use `#!/usr/bin/env bash` and `set -Eeuo pipefail`, which causes most command failures, unset-variable references and pipeline errors to terminate the script rather than silently continuing. None of the scripts changes the shell's global Kubernetes context.
+All four scripts use `#!/usr/bin/env bash` and `set -Eeuo pipefail`, which causes most command failures, unset-variable references and pipeline errors to terminate the script rather than silently continuing. None of the scripts changes the shell's global Kubernetes context.
 
 ### Command risk classification
 
@@ -373,3 +374,30 @@ The command deletes the local cluster, including its Deployments, Services and n
 This repository documents **real operator-observed** local cluster deployment, an ARM64 cartservice incident, existing EKS service validation, and two disposable Kubernetes operations tests. It does **not** demonstrate production-grade HA, durable Redis data, complete EKS infrastructure provisioning, or official TWN assessment completion.
 
 For observed results, see [portfolio evidence](portfolio-evidence.md); for the outstanding EKS source-of-truth risk, see [lessons learned](lessons-learned.md).
+
+## 11. Historical `bootstrap-github.sh` — One-time project initialization
+
+**Use case:** Create the CAP04 GitHub repository and its initial CAP04-001 architecture pull request from an **uninitialized extracted project directory**. This is a historical **one-time** helper; our repository already exists and the initial PR is merged. **Do not rerun it in this established repository.**
+
+```bash
+# View code only. Do not execute this historical bootstrap on the existing project.
+sed -n '1,200p' scripts/bootstrap-github.sh
+```
+
+### Preconditions and behavior
+
+1. Requires `git` and GitHub CLI `gh`, with successful `gh auth status`.
+2. Rejects a directory containing `.git`, and requires `README.md`, `docs/requirements.md` and `docs/architecture.md`.
+3. Rejects initialization when `asambataiden/twn-capstone-04-kubernetes-microservices` already exists remotely.
+4. Temporarily saves the current README, writes a minimal baseline README, runs `git init -b main`, stages a minimal initial commit and executes `gh repo create ... --private --source . --remote origin --push`.
+5. Creates `docs/cap04-001-architecture-baseline`, restores the full README, stages documentation and the bootstrap script, checks the staged diff, commits and pushes the branch.
+6. Opens the initial CAP04-001 pull request via `gh pr create` and prints its intended URL.
+
+### Side effects, safety and recovery
+
+- **Mutating:** Initializes local Git, changes `README.md`, creates commits, creates a **private remote GitHub repository**, pushes branches, and creates a PR. It is not a dry-run tool.
+- **Guardrails:** Explicit owner/repo, dependency/auth checks, refusal to initialize an existing local Git repo or overwrite an existing remote repo.
+- **Limitations:** It is not transactional; an interruption after the remote repository is created can leave a partially initialized state. It has no automated rollback; inspect local Git and remote GitHub state manually before recovery. Avoid deleting the existing remote or force-pushing to resolve a bootstrap error.
+- **Use now:** **None**. The repo and first PR already exist. Keep the script for historical traceability only; all future work should use ordinary feature branches and reviewed PRs.
+
+**Note:** The three operational Bash scripts above are the ones to use for continuing Kubernetes learning. This fourth script only explains how the portfolio's original GitHub repository was bootstrapped.
