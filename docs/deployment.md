@@ -132,3 +132,38 @@ kubectl --context k3d-twn-capstone04 top nodes
 ```
 
 Only once relevant Deployments are available should the operator test port-forward, browser product browsing, cart and simulated checkout. Record actual results rather than inferring success from resource creation.
+
+## Live deployment follow-up — runtime troubleshooting
+
+Subsequent operator output confirms **11/12 Deployments Ready and Available**, including `frontend` (successful rollout), and **loadgenerator 0/1** with `Init:CrashLoopBackOff` for init container `frontend-check`. The `cartservice` Pod is currently Ready but had **5 restarts**; liveness probe / connection-reset events need investigation.
+
+A second `deploy` run returned `unchanged` for all resources, confirming declarative reapplication without modifications.
+
+Local `8080` port-forward failed with `address already in use`; a `curl -I http://localhost:8080` returned a **302 redirect to /login**, which cannot be credited as an Online Boutique response because the port-forward never started. Prefer a different local port (e.g. `18080`) rather than terminating unrelated processes.
+
+### Troubleshooting commands — read-only
+
+```bash
+kubectl --context k3d-twn-capstone04 -n online-boutique \
+  logs deployment/loadgenerator -c frontend-check --tail=100
+kubectl --context k3d-twn-capstone04 -n online-boutique \
+  describe deployment/loadgenerator
+kubectl --context k3d-twn-capstone04 -n online-boutique \
+  get pods -l app=loadgenerator -o wide
+kubectl --context k3d-twn-capstone04 -n online-boutique \
+  logs deployment/cartservice -c server --previous --tail=100
+kubectl --context k3d-twn-capstone04 -n online-boutique \
+  describe deployment/cartservice
+lsof -nP -iTCP:8080 -sTCP:LISTEN
+```
+
+To avoid `8080` conflict and test the frontend, open a dedicated terminal:
+
+```bash
+kubectl --context k3d-twn-capstone04 -n online-boutique \
+  port-forward service/frontend 18080:80
+```
+
+In another terminal run `curl -i http://127.0.0.1:18080/` and open the same URL in a browser. Confirm the port-forward displays `Forwarding from 127.0.0.1:18080` before attributing a response to the frontend.
+
+**Acceptance remains pending** until the load generator's init failure is explained/resolved and the shopping workflow is exercised; do not tune probe timings or change replicas without diagnostic evidence.
