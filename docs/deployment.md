@@ -300,3 +300,18 @@ kubectl --context "$CTX" -n online-shop rollout history deployment/adservice
 ```
 
 Review the actual container ports, health probes, Deployment manager/annotations and image, and reconcile the *source manifest that owns the existing deployment* before applying a single-service remediation. Do not declare CAP04-003 fully compliant/reproducible or merge PR #3 before resolving/documenting this deviation; also keep CAP04-004 non-disruptive experiments separate.
+
+## EKS adservice image correction — verified (24 October 2026)
+
+The operator verified `Deployment/adservice` in existing EKS namespace `online-shop` was incorrectly running `gcr.io/google-samples/microservices-demo/shippingservice:v0.8.0` in container `service`. Its Service, selector and port 9555 were correct. The pinned upstream release expects `gcr.io/google-samples/microservices-demo/adservice:v0.8.0`.
+
+**Operator action (imperative, targeted):**
+```bash
+kubectl --context "$CTX" -n online-shop set image deployment/adservice \
+  service=gcr.io/google-samples/microservices-demo/adservice:v0.8.0
+kubectl --context "$CTX" -n online-shop rollout status deployment/adservice --timeout=180s
+```
+
+**Observed:** Successful rollout; image corrected to `adservice:v0.8.0`; new Pod `adservice-5cb44cd5db-nxmhl` `1/1 Running`, zero restarts; revision history contains 1 and 2; frontend still returned HTTP 200 via existing port-forward on `127.0.0.1:18081`. An attempted second port-forward on the occupied 18081 failed, but the first forward appeared still active. The observed HTTP 200 does not independently validate advertisement rendering or business gRPC response.
+
+**Outstanding:** Identify and update the original Git-managed source of truth for the **pre-existing** EKS deployment; `kubectl set image` does not repair any stale client-side last-applied configuration. Review potential advertisement rendering/response. The CAP04 repository's upstream pinned manifest was already correct; do not edit it or blindly apply all resources. Preserve deliberate EKS differences (11 vs 12 Deployments, absent loadgenerator, NodePort and existing cloud LoadBalancer).
