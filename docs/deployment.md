@@ -85,3 +85,26 @@ The port-forward command occupies its own terminal. In a **second Terminal** vis
 ## Evidence to retain
 
 Capture command outputs for manifest validation, Deployment readiness, Pods/Services, browser shopping journey and any observed failures. Remove tokens, credentials and other sensitive fields before committing logs.
+
+## Operator pre-deployment validation — 24 October 2026
+
+The operator ran the commands from this milestone on the dedicated k3d cluster and reported:
+
+- `bash -n scripts/capstone04-deploy.sh`: **PASS** (no syntax errors).
+- `bash scripts/capstone04-deploy.sh fetch`: **PASS**, pinned source commit `218ba3dcef1d19821711e62996162f8b29c55be4`.
+- `bash scripts/capstone04-deploy.sh plan`: **PASS**, all 24 Kubernetes resource definitions were accepted in server-side dry-run mode.
+- Target explicitly confirmed: `k3d-twn-capstone04` / `online-boutique`.
+- `kubectl ... top nodes`: **76m CPU**, **983Mi memory** (12% as reported by metrics-server) before application deployment.
+- `kubectl ... -n online-boutique get all`: **No resources found** before application deployment.
+
+**Assessment:** Kubernetes API manifest checks passed and the namespace was empty. Runtime image pulls, scheduling, Pod readiness, browser access, and simulated checkout are **not yet validated**. Docker's reported allocation (~7.75 GiB) may require observing memory pressure during the first startup.
+
+### Next commands
+
+```bash
+bash scripts/capstone04-deploy.sh deploy
+kubectl --context k3d-twn-capstone04 -n online-boutique get deployments,pods,services -o wide
+kubectl --context k3d-twn-capstone04 -n online-boutique get events --sort-by=.lastTimestamp
+```
+
+The deploy script asks for exact interactive confirmation. These commands must only target the dedicated local context. Wait for actual rollout status before asserting deployment success.
