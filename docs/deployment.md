@@ -266,3 +266,18 @@ bash scripts/capstone04-eks-evidence.sh
 ```
 
 Retain the output (sanitized where necessary) for the final source-manifest comparison and PR review. The `online-shop` workload predates this capstone repo and must not be overwritten merely to prove ownership.
+
+## CAP04-004 — read-only operations baseline (24 October 2026)
+
+Before any fault-injection exercise, the operator inspected the existing EKS `online-shop/frontend` deployment:
+
+- One desired, updated, and available frontend replica, zero unavailable; frontend Pod `1/1 Running` with zero restarts.
+- `RollingUpdate` deployment strategy; `25% maxUnavailable`, `25% maxSurge`, `minReadySeconds: 0`.
+- Image `gcr.io/google-samples/microservices-demo/frontend:v0.8.0` with port 8080 and internal service-discovery endpoints.
+- Rollout history has **revision 1 only**; there is no earlier revision to revert to.
+- No PodDisruptionBudget objects found in `online-shop`.
+- Deployment has no reported warning events.
+
+**Risk assessment:** `frontend` is a single-replica live bootcamp workload. Direct Pod deletion could interrupt availability until a replacement becomes Ready; a PDB would not block manual Pod deletion. A rolling-update rollback exercise has no previous frontend revision. Accordingly, do **not** delete or alter this existing Pod just to demonstrate self-healing. Prefer a separately named, scoped, resource-limited test Deployment and verify node capacity and available cloud quota before introducing even a test workload. Keep fault injection limited to the disposable workload; remove only resources owned by the experiment. Do not assume test availability until the operator demonstrates it.
+
+The CAP04-003 EKS image inventory and reproducibility gate remains open. CAP04-004 is an optional operational-learning extension, not a replacement for this gate.
