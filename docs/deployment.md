@@ -281,3 +281,22 @@ Before any fault-injection exercise, the operator inspected the existing EKS `on
 **Risk assessment:** `frontend` is a single-replica live bootcamp workload. Direct Pod deletion could interrupt availability until a replacement becomes Ready; a PDB would not block manual Pod deletion. A rolling-update rollback exercise has no previous frontend revision. Accordingly, do **not** delete or alter this existing Pod just to demonstrate self-healing. Prefer a separately named, scoped, resource-limited test Deployment and verify node capacity and available cloud quota before introducing even a test workload. Keep fault injection limited to the disposable workload; remove only resources owned by the experiment. Do not assume test availability until the operator demonstrates it.
 
 The CAP04-003 EKS image inventory and reproducibility gate remains open. CAP04-004 is an optional operational-learning extension, not a replacement for this gate.
+
+## CAP04-003 — Final EKS image evidence and deviation (24 October 2026)
+
+Operator ran the repository's read-only `scripts/capstone04-eks-evidence.sh` against verified EKS cluster `floral-mongoose-1792497995`, namespace `online-shop`. Both worker nodes were Ready `amd64`. Eleven listed Deployments were available, with eleven corresponding Pods `1/1 Running` and zero restarts. Frontend `NodePort` and `frontend-external` `LoadBalancer` already exist (the latter is public-facing cloud infrastructure).
+
+**Important mismatch discovered:** `Deployment/adservice` currently specifies **`gcr.io/google-samples/microservices-demo/shippingservice:v0.8.0`**. The pinned original upstream `release/kubernetes-manifests.yaml` at `218ba3dcef1d19821711e62996162f8b29c55be4` specifies **`gcr.io/google-samples/microservices-demo/adservice:v0.8.0`**. The `shippingservice` Deployment itself also uses the shippingservice image correctly. This is a reproducibility and application-configuration defect despite the observed Ready status and successful storefront/cart/mock-checkout journey; advertisements have not been specifically acceptance-tested.
+
+**Other differences:** EKS reports 11 application Deployments, whereas the pinned upstream baseline has 12 (including `loadgenerator`). The already-running EKS frontend Service is `NodePort`, whereas the upstream baseline must be compared before claiming exact equivalence. Do not blindly apply the full upstream manifest to the existing namespace: it may mutate pre-existing resources, create a load generator, and change Service exposure.
+
+**Next, inspect before remediation (read-only):**
+
+```bash
+CTX='aws-admin-asamba.tamajong.aiden@outlook.com@floral-mongoose-1792497995.eu-north-1.eksctl.io'
+kubectl --context "$CTX" -n online-shop get deployment adservice -o yaml
+kubectl --context "$CTX" -n online-shop get service adservice -o yaml
+kubectl --context "$CTX" -n online-shop rollout history deployment/adservice
+```
+
+Review the actual container ports, health probes, Deployment manager/annotations and image, and reconcile the *source manifest that owns the existing deployment* before applying a single-service remediation. Do not declare CAP04-003 fully compliant/reproducible or merge PR #3 before resolving/documenting this deviation; also keep CAP04-004 non-disruptive experiments separate.
