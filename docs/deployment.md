@@ -202,3 +202,24 @@ docker buildx imagetools inspect --format '{{json .Image}}' \
 This confirms the image/node mismatch. It is a strong explanation for `.NET` instability under architecture emulation, **but does not uniquely prove the origin of the managed and native runtime faults**. The cart container had prior termination code 133 and multiple restarts.
 
 **Controlled resolution plan:** inspect a candidate upstream ARM64 cart-service image such as v0.10.3 (upstream release notes report ARM64 support), pin its immutable digest only after validation, assess cross-version protobuf/gRPC compatibility with remaining v0.8.0 services, then apply a separately versioned, narrowly scoped overlay. No runtime image change has been made yet. If no compatible image exists, consider a reproducible native ARM64 build using the existing source/contract instead of replacing the whole stack.
+
+## EKS discovery — reuse existing bootcamp deployment (24 October 2026)
+
+The operator verified EKS cluster `floral-mongoose-1792497995` (`eu-north-1`, Kubernetes 1.34) has two Ready `amd64` EC2 nodes. The cluster already hosts an `online-shop` namespace with **11 Ready Deployments** (including `cartservice`) and all related Pods reporting zero restarts. It also hosts existing `monitoring` and other workloads.
+
+Node memory snapshots: **65%** and **79%**. A second full Online Boutique installation would need capacity analysis and could interfere with unrelated running resources. The existing `online-shop` frontend also has a provisioned cloud LoadBalancer, which already incurs infrastructure costs.
+
+**Decision:** Do not run the current `capstone04-deploy.sh` against EKS. It is hard-coded to the isolated `k3d-twn-capstone04` context, and the EKS namespace `online-shop` contains an existing deployment that must not be overwritten. First verify the existing application's image tags, exact manifests/provenance and functional workflow using strictly read-only commands and local port-forward. If source traceability and application tests pass, existing EKS deployment can serve as CAP04-003 operational baseline. Deployment automation changes, if required, must be separately reviewed and protected against changing existing resources.
+
+Suggested checks:
+
+```bash
+CTX='aws-admin-asamba.tamajong.aiden@outlook.com@floral-mongoose-1792497995.eu-north-1.eksctl.io'
+kubectl --context "$CTX" -n online-shop get deployments -o wide
+kubectl --context "$CTX" -n online-shop get pods -o wide
+kubectl --context "$CTX" -n online-shop port-forward service/frontend 18081:80
+```
+
+In a second terminal: `curl -sS -o /dev/null -w 'HTTP %{http_code}\\n' http://127.0.0.1:18081/`. Only after a healthy response should manual browse/cart/simulated checkout be recorded.
+
+**Important qualification:** Existing application readiness is observed; successful end-to-end checkout has not been established. Current EKS workload manifests and version provenance must be verified before claiming this repository reproduces the existing EKS environment. The official TWN assessment constraints remain unverified.
