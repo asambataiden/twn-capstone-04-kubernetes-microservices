@@ -108,3 +108,43 @@ If Kubernetes tooling is not installed, note that fact; do not run the commands.
 ## Next stage
 
 Once the decision gates are complete, create a separate implementation feature branch for the actual cluster deployment. Validate Pods/Deployments, internal Services, browser access and the simulated shopping journey. Do not mark those tests passed until their outputs are captured.
+
+## Environment inventory — 24 October 2026
+
+Recorded from the operator's local, read-only Terminal output. Avoid committing AWS account identifiers, kubeconfig files, credentials or tokens.
+
+| Item | Observed |
+| --- | --- |
+| Operating system | macOS 27.0.1 on arm64 |
+| Host logical CPUs reported | 16 |
+| Host physical memory | 128 GiB |
+| Docker CLI | 29.2.1 |
+| Docker engine allocation | 16 CPUs, approximately 7.75 GiB memory |
+| kubectl | v1.37.1 client; server version unverified |
+| Bundled Kustomize | v5.8.1 |
+| Helm | v4.3.0 |
+| AWS CLI | 2.34.16 |
+| kind | Not installed |
+| Existing kubeconfig entries | Multiple AWS EKS contexts, two k3d contexts, one Minikube context |
+| **Current context** | **AWS EKS context (not approved as Capstone 04 target)** |
+
+### Safety implications
+
+- **Do not run `kubectl apply`, `delete`, Helm install, or other write commands against the current EKS context.** A kubeconfig entry is not evidence that the named cluster exists or is healthy.
+- Host memory is plentiful, but Docker's allocated RAM is a more relevant limit for local Kubernetes.
+- Reuse of a **dedicated new k3d cluster** is a reasonable candidate if the k3d CLI is installed. Existing k3d and Minikube context entries are not proof that their clusters are running; do not modify or destroy them.
+- No need to install `kind` merely because the upstream example supports it; verify course instructions and select a small isolated runtime.
+- The official TWN assignment's required target cluster is still unknown. EKS remains optional pending that decision.
+
+### Next read-only checks on the Mac
+
+```bash
+command -v k3d && k3d version || echo "k3d not installed"
+command -v minikube && minikube version || echo "minikube not installed"
+command -v k3d && k3d cluster list || true
+command -v minikube && minikube profile list || true
+docker system df
+kubectl config current-context
+```
+
+These commands list environments and resource usage; they do not deploy or destroy anything. Review their output before creating a dedicated lab cluster.
