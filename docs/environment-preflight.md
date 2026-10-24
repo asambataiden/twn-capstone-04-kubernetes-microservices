@@ -148,3 +148,44 @@ kubectl config current-context
 ```
 
 These commands list environments and resource usage; they do not deploy or destroy anything. Review their output before creating a dedicated lab cluster.
+
+## Local cluster discovery — 24 October 2026
+
+The operator ran the next read-only checks:
+
+| Observation | Result |
+| --- | --- |
+| k3d CLI | v5.8.3; default bundled k3s v1.33.6-k3s1 |
+| k3d `banking-local` | 0/1 servers running, 0/0 agents; keep untouched |
+| k3d `banking-platform` | 0/1 servers running, 0/0 agents; keep untouched |
+| Minikube | v1.39.0; existing Docker profile stopped; keep untouched |
+| Docker images | 52 images, ~14.5 GB on disk |
+| Docker local volumes | 32 volumes, ~19.78 GB on disk; do not prune without an independent inventory |
+| Docker build cache | ~11.55 GB; no cleanup authorized |
+| Active Kubernetes context | Still points at an AWS EKS context; **not the Capstone target** |
+| Local Git | Switched to `main`, fast-forwarded to merged CAP04-001 commit `9766f0e` |
+
+### Runtime proposal
+
+**Dedicated local k3d cluster**, not any existing banking cluster and not the current EKS context, pending confirmation of TWN's exact Project 04 requirements. The host has ample memory; Docker Desktop's ~7.75 GiB allocation is the operational constraint. Initially create one server with no agents and assess workload requirements before deploying the full app; verify Docker capacity and per-service resource requests first.
+
+### Safe cluster-creation procedure (operator-run, not executed)
+
+The following intentionally names a new cluster, requires confirmation of the Docker engine, refuses an existing cluster name, and uses an explicit kubeconfig context for verification.
+
+```bash
+set -euo pipefail
+CLUSTER_NAME=twn-capstone04
+docker info >/dev/null
+if k3d cluster list -o json | grep -q '"name": *"twn-capstone04"'; then
+  echo "Cluster name already exists; refusing to modify it" >&2
+  exit 1
+fi
+k3d cluster create "$CLUSTER_NAME" --servers 1 --agents 0 --wait
+kubectl --context "k3d-$CLUSTER_NAME" cluster-info
+kubectl --context "k3d-$CLUSTER_NAME" get nodes -o wide
+```
+
+**Safety rule:** Always include `--context k3d-twn-capstone04` in subsequent `kubectl` commands until the current-context state has been deliberately verified. The `k3d cluster create` operation may change the current kubeconfig context, so verify again after creating the cluster. Creating this cluster does not affect or delete other clusters; it consumes local Docker resources.
+
+**Open:** Official TWN assignment, disk headroom and full Online Boutique memory capacity must be checked before applying application manifests. Source images may have architecture compatibility constraints on arm64; verify image manifests before deployment.
