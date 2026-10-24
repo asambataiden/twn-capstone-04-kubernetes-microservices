@@ -1,6 +1,6 @@
 # TWN Capstone 04 — Deploy Microservices Application in Kubernetes
 
-**Status:** CAP04-001 — Architecture, requirements, and use-case baseline (planning only; no cluster deployed).
+**Status:** CAP04-001 and CAP04-002 completed; CAP04-003 local deployment exercised and existing EKS storefront functionally validated. Manifest traceability and milestone closure remain pending.
 
 ## Goal
 
@@ -17,6 +17,7 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 | [Architecture](docs/architecture.md) | Component/dependency context, Kubernetes architecture, design choices |
 | [Use cases](docs/use-cases.md) | User-facing journey and operational DevOps scenarios, acceptance criteria |
 | [Delivery plan](docs/delivery-plan.md) | Milestones, implementation and validation gates |
+| [Deployment and validation](docs/deployment.md) | Pinned local deployment script, ARM64 incident, existing EKS validation and remaining evidence gate |
 
 ## Scope and guardrails
 
@@ -28,10 +29,13 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 - Apply secure defaults, reproducible configuration, explicit resource limits, validation and rollback procedures where practical.
 - Treat the existing source repository as a reference; make capstone-specific changes in an independent repository/branch.
 
-## Next decision
+## CAP04-003 acceptance status
 
-**CAP04-002: Choose the cluster runtime and prove a minimal deployment.** Default for initial verification is a local `kind` cluster when host resources permit; use a managed cluster only if official TWN requirements call for it. First obtain the exact Project 04 assessment/submission instructions.
+- Local k3d cluster created and upstream application resources applied by a guarded, repeatable script; cartservice v0.8.0 is amd64-only while the k3d worker is arm64, leading to application crashes during testing.
+- Existing TWN EKS cluster `floral-mongoose-1792497995` uses two Ready amd64 workers and hosts an already-running Online Boutique deployment in namespace `online-shop`.
+- **Operator-confirmed EKS functional results:** frontend HTTP 200, catalog PASS, product details PASS, add-to-cart PASS, simulated checkout PASS.
+- **Not yet demonstrated:** CAP04 script reprovisioning/redeploying the EKS installation; exact agreement of EKS running manifest/images with pinned release; loadgenerator working in EKS; TWN rubric compliance.
 
-## Current evidence
+**Next gate:** Compare EKS Deployment images and workloads with the source-pinned artifact, record any controlled differences, then review PR #3. Do not deploy a second full stack or overwrite the existing `online-shop` resources merely to close the checklist.
 
-CAP04-001 documents existing GitHub source; no Kubernetes deployment, checkout journey, automatic recovery or rollout test is claimed yet.
+**Deployment script safety:** `scripts/capstone04-deploy.sh` currently targets only `k3d-twn-capstone04` and namespace `online-boutique`; it must not be run as an EKS deployment procedure.
