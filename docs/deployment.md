@@ -223,3 +223,33 @@ kubectl --context "$CTX" -n online-shop port-forward service/frontend 18081:80
 In a second terminal: `curl -sS -o /dev/null -w 'HTTP %{http_code}\\n' http://127.0.0.1:18081/`. Only after a healthy response should manual browse/cart/simulated checkout be recorded.
 
 **Important qualification:** Existing application readiness is observed; successful end-to-end checkout has not been established. Current EKS workload manifests and version provenance must be verified before claiming this repository reproduces the existing EKS environment. The official TWN assessment constraints remain unverified.
+
+## EKS functional acceptance — operator-confirmed (24 October 2026)
+
+**Target:** Pre-existing EKS cluster `floral-mongoose-1792497995` in `eu-north-1`, namespace `online-shop`. This environment was provisioned/deployed in previous TWN bootcamp work; it was **not deployed by this CAP04-003 repository's k3d-only script**.
+
+**Transport:** `kubectl --context "<verified EKS context>" -n online-shop port-forward service/frontend 18081:80` with browser at `http://127.0.0.1:18081/`. The operator verified `curl` returned `HTTP 200`.
+
+The operator explicitly reported these four manual tests as **PASS**:
+1. Product catalog displays correctly.
+2. Product details open successfully.
+3. Product can be added to the shopping cart.
+4. Simulated checkout completes successfully.
+
+Earlier EKS observations: eleven application Deployments available and application Pods showing zero restarts at that snapshot. The `loadgenerator` Deployment was **not present** in the reported `online-shop` deployment inventory; therefore do not report 12/12 Deployments or successful load-generator behavior in EKS.
+
+**Acceptance scope:** Existing EKS Online Boutique storefront and shopping workflow validated. Do not claim successful standalone CAP04-003 EKS redeployment, complete manifest equivalence, automated reproducibility, performance testing, or formal TWN rubric compliance based solely on these checks.
+
+### Remaining evidence gate before closing CAP04-003
+
+Read-only image inventory and metadata:
+
+```bash
+CTX='aws-admin-asamba.tamajong.aiden@outlook.com@floral-mongoose-1792497995.eu-north-1.eksctl.io'
+kubectl --context "$CTX" -n online-shop get deployments -o \
+  'custom-columns=NAME:.metadata.name,IMAGE:.spec.template.spec.containers[*].image'
+kubectl --context "$CTX" -n online-shop get pods
+kubectl --context "$CTX" -n online-shop get svc frontend frontend-external
+```
+
+Compare the image references and service/deployment inventory with the pinned upstream artifact; document any pre-existing deviations (e.g. frontend NodePort, cloud LoadBalancer, absent loadgenerator) without automatically applying manifests to the shared EKS environment. The current `scripts/capstone04-deploy.sh` remains intentionally restricted to the k3d context. If a reproducible EKS workflow is required for this milestone, implement it in a separately reviewed, explicitly targeted and non-destructive change; do not overwrite `online-shop` by default.
