@@ -253,3 +253,16 @@ kubectl --context "$CTX" -n online-shop get svc frontend frontend-external
 ```
 
 Compare the image references and service/deployment inventory with the pinned upstream artifact; document any pre-existing deviations (e.g. frontend NodePort, cloud LoadBalancer, absent loadgenerator) without automatically applying manifests to the shared EKS environment. The current `scripts/capstone04-deploy.sh` remains intentionally restricted to the k3d context. If a reproducible EKS workflow is required for this milestone, implement it in a separately reviewed, explicitly targeted and non-destructive change; do not overwrite `online-shop` by default.
+
+### Reproducible read-only EKS inventory helper
+
+The feature branch includes `scripts/capstone04-eks-evidence.sh`. Its cluster name, context and namespace are intentionally pinned to the existing, verified TWN EKS installation. It verifies that the selected kubeconfig context points to the live EKS API endpoint, then prints node architecture, Deployment images/availability, Pods and frontend Services. It **cannot** deploy/modify/delete resources. This is an observational evidence helper, not a substitute for EKS deployment automation.
+
+```bash
+git switch feat/cap04-003-online-boutique-deployment
+git pull --ff-only origin feat/cap04-003-online-boutique-deployment
+bash -n scripts/capstone04-eks-evidence.sh
+bash scripts/capstone04-eks-evidence.sh
+```
+
+Retain the output (sanitized where necessary) for the final source-manifest comparison and PR review. The `online-shop` workload predates this capstone repo and must not be overwritten merely to prove ownership.
