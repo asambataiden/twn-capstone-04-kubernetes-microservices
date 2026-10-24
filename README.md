@@ -1,6 +1,6 @@
 # TWN Capstone 04 — Deploy Microservices Application in Kubernetes
 
-**Status:** CAP04-001 and CAP04-002 completed; CAP04-003 local deployment exercised and existing EKS storefront functionally validated. Manifest traceability and milestone closure remain pending.
+**Status (24 October 2026):** CAP04-001–004 merged; CAP04-005 portfolio documentation in review. Existing EKS application tests passed, but declarative EKS reproducibility and official TWN assessment remain unverified.
 
 ## Goal
 
@@ -17,7 +17,11 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 | [Architecture](docs/architecture.md) | Component/dependency context, Kubernetes architecture, design choices |
 | [Use cases](docs/use-cases.md) | User-facing journey and operational DevOps scenarios, acceptance criteria |
 | [Delivery plan](docs/delivery-plan.md) | Milestones, implementation and validation gates |
-| [Deployment and validation](docs/deployment.md) | Pinned local deployment script, ARM64 incident, existing EKS validation and remaining evidence gate |
+| [Deployment and validation](docs/deployment.md) | Pinned local deployment script, ARM64 incident, EKS validation and targeted Adservice correction |
+| [Portfolio acceptance evidence](docs/portfolio-evidence.md) | Acceptance matrix with passed, failed and unresolved checks |
+| [Lessons learned and open follow-ups](docs/lessons-learned.md) | Architecture compatibility, ownership, incident findings and remaining limitations |
+| [Kubernetes self-healing](docs/operations-self-healing.md) | Disposable Pod replacement exercise and cleanup |
+| [Rolling update and rollback](docs/operations-rolling-update.md) | Disposable revision-change and rollback exercise |
 
 ## Scope and guardrails
 
@@ -36,6 +40,6 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 - **Operator-confirmed EKS functional results:** frontend HTTP 200, catalog PASS, product details PASS, add-to-cart PASS, simulated checkout PASS.
 - **Not yet demonstrated:** CAP04 script reprovisioning/redeploying the EKS installation; exact agreement of EKS running manifest/images with pinned release; loadgenerator working in EKS; TWN rubric compliance.
 
-**Next gate:** Compare EKS Deployment images and workloads with the source-pinned artifact, record any controlled differences, then review PR #3. Do not deploy a second full stack or overwrite the existing `online-shop` resources merely to close the checklist.
+**Verified since initial CAP04-003 report:** An incorrect EKS `adservice` image was detected and corrected to `adservice:v0.8.0`; the service is Ready and receives gRPC requests. Two CAP04-004 disposable Deployment exercises passed (Pod replacement and rollout/rollback), and both temporary Deployments were deleted. [PR #3](https://github.com/asambataiden/twn-capstone-04-kubernetes-microservices/pull/3) and [PR #4](https://github.com/asambataiden/twn-capstone-04-kubernetes-microservices/pull/4) are merged. The EKS `adservice` last-applied annotation **still contains the former incorrect image**; the originally applied EKS manifest was not identified. Existing EKS has 11 Deployments (no upstream loadgenerator) and is not proven equivalent to or reproducibly deployed by the pinned 12-Deployment reference. See the [evidence matrix](docs/portfolio-evidence.md).
 
 **Deployment script safety:** `scripts/capstone04-deploy.sh` currently targets only `k3d-twn-capstone04` and namespace `online-boutique`; it must not be run as an EKS deployment procedure.
