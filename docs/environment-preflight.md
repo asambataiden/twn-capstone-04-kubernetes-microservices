@@ -233,3 +233,13 @@ The operator confirmed:
 **Recovery:** Do **not** recreate or delete the cluster or namespace. Fetch the updated feature branch and rerun `bash -n`, `verify`, `namespace`, and `status`. The `namespace` operation is idempotent and should report that the existing namespace is reused.
 
 The fix is committed in this PR; execution of the corrected version on the operator's Mac remains to be verified.
+
+## Corrected script — validation completed by operator
+
+- `git pull --ff-only` fast-forwarded the feature branch to the context-check fix.
+- `bash -n scripts/capstone04-cluster.sh` passed.
+- `verify` confirmed the control-plane node was `Ready`, and all running system workloads, including Traefik, were healthy.
+- `namespace` reported the existing `online-boutique` namespace without changing it.
+- `status` succeeded and correctly reported **no resources** in the application namespace.
+
+**CAP04-002 local-environment acceptance:** PASSED. Bootcamp's exact official provider/submission instructions remain an explicit open item. No Online Boutique workload has been deployed.
