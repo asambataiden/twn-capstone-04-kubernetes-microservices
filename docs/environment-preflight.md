@@ -216,3 +216,20 @@ The `destroy` subcommand requires an exact interactive confirmation and deletes 
 ### Validation needed for script completion
 
 Run `bash -n scripts/capstone04-cluster.sh` and, if available, `shellcheck scripts/capstone04-cluster.sh`. Then run preflight, verify and namespace subcommands on the dedicated cluster and capture outputs. No user-machine execution is claimed from this GitHub commit.
+
+## First automation execution — diagnosis and corrective action
+
+The operator confirmed:
+- `bash -n scripts/capstone04-cluster.sh` completed successfully.
+- `preflight` discovered `twn-capstone04` as running, without touching the existing stopped banking clusters.
+- `verify` confirmed the dedicated k3d node **Ready**, and all active `kube-system` Pods, including Traefik, were Ready/Running.
+- `namespace` created `online-boutique`, then the post-create check reported an **incorrect missing-context error**.
+- `status` also reported a missing context, despite `preflight` and `verify` earlier identifying the same context.
+
+**Root cause:** `require_context` piped `kubectl config get-contexts -o name` to `grep -Fxq`. `grep -q` can close the pipe as soon as it finds a match, causing the upstream process to exit with SIGPIPE; `pipefail` then fails the condition even when the requested context exists.
+
+**Fix:** Capture the context list into a variable first, then pass it to `grep -Fxq` through a here-string (not a live pipe). This preserves strict error checking while preventing the false-negative pipeline race.
+
+**Recovery:** Do **not** recreate or delete the cluster or namespace. Fetch the updated feature branch and rerun `bash -n`, `verify`, `namespace`, and `status`. The `namespace` operation is idempotent and should report that the existing namespace is reused.
+
+The fix is committed in this PR; execution of the corrected version on the operator's Mac remains to be verified.
