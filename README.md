@@ -20,6 +20,7 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 | [Deployment and validation](docs/deployment.md) | Pinned local deployment script, ARM64 incident, EKS validation and targeted Adservice correction |
 | [Scripts reference and operator runbook](docs/scripts-reference.md) | All script commands, prerequisites, outputs, risk classifications, troubleshooting and recovery |
 | [Final submission report](docs/final-submission-report.md) | Consolidated project narrative, acceptance evidence, limitations and submission checklist |
+| [TWN submission readiness](docs/twn-submission-readiness.md) | Public course criteria, Git project evidence and course portal verification gates |
 | [Portfolio acceptance evidence](docs/portfolio-evidence.md) | Acceptance matrix with passed, failed and unresolved checks |
 | [Lessons learned and open follow-ups](docs/lessons-learned.md) | Architecture compatibility, ownership, incident findings and remaining limitations |
 | [Kubernetes self-healing](docs/operations-self-healing.md) | Disposable Pod replacement exercise and cleanup |
