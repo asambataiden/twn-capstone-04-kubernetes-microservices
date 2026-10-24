@@ -21,6 +21,7 @@ Deploy and operate the existing **Online Boutique** e-commerce microservices app
 | [Scripts reference and operator runbook](docs/scripts-reference.md) | All script commands, prerequisites, outputs, risk classifications, troubleshooting and recovery |
 | [Final submission report](docs/final-submission-report.md) | Consolidated project narrative, acceptance evidence, limitations and submission checklist |
 | [TWN submission readiness](docs/twn-submission-readiness.md) | Public course criteria, Git project evidence and course portal verification gates |
+| [Official Module 10 checklist gap analysis](docs/module10-official-checklist-gap-analysis.md) | Checklist-sourced Lesson 22–25 comparison, identified gaps and safe follow-ups |
 | [Portfolio acceptance evidence](docs/portfolio-evidence.md) | Acceptance matrix with passed, failed and unresolved checks |
 | [Lessons learned and open follow-ups](docs/lessons-learned.md) | Architecture compatibility, ownership, incident findings and remaining limitations |
 | [Kubernetes self-healing](docs/operations-self-healing.md) | Disposable Pod replacement exercise and cleanup |
