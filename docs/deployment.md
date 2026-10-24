@@ -281,3 +281,49 @@ Before any fault-injection exercise, the operator inspected the existing EKS `on
 **Risk assessment:** `frontend` is a single-replica live bootcamp workload. Direct Pod deletion could interrupt availability until a replacement becomes Ready; a PDB would not block manual Pod deletion. A rolling-update rollback exercise has no previous frontend revision. Accordingly, do **not** delete or alter this existing Pod just to demonstrate self-healing. Prefer a separately named, scoped, resource-limited test Deployment and verify node capacity and available cloud quota before introducing even a test workload. Keep fault injection limited to the disposable workload; remove only resources owned by the experiment. Do not assume test availability until the operator demonstrates it.
 
 The CAP04-003 EKS image inventory and reproducibility gate remains open. CAP04-004 is an optional operational-learning extension, not a replacement for this gate.
+
+## CAP04-003 — Final EKS image evidence and deviation (24 October 2026)
+
+Operator ran the repository's read-only `scripts/capstone04-eks-evidence.sh` against verified EKS cluster `floral-mongoose-1792497995`, namespace `online-shop`. Both worker nodes were Ready `amd64`. Eleven listed Deployments were available, with eleven corresponding Pods `1/1 Running` and zero restarts. Frontend `NodePort` and `frontend-external` `LoadBalancer` already exist (the latter is public-facing cloud infrastructure).
+
+**Important mismatch discovered:** `Deployment/adservice` currently specifies **`gcr.io/google-samples/microservices-demo/shippingservice:v0.8.0`**. The pinned original upstream `release/kubernetes-manifests.yaml` at `218ba3dcef1d19821711e62996162f8b29c55be4` specifies **`gcr.io/google-samples/microservices-demo/adservice:v0.8.0`**. The `shippingservice` Deployment itself also uses the shippingservice image correctly. This is a reproducibility and application-configuration defect despite the observed Ready status and successful storefront/cart/mock-checkout journey; advertisements have not been specifically acceptance-tested.
+
+**Other differences:** EKS reports 11 application Deployments, whereas the pinned upstream baseline has 12 (including `loadgenerator`). The already-running EKS frontend Service is `NodePort`, whereas the upstream baseline must be compared before claiming exact equivalence. Do not blindly apply the full upstream manifest to the existing namespace: it may mutate pre-existing resources, create a load generator, and change Service exposure.
+
+**Next, inspect before remediation (read-only):**
+
+```bash
+CTX='aws-admin-asamba.tamajong.aiden@outlook.com@floral-mongoose-1792497995.eu-north-1.eksctl.io'
+kubectl --context "$CTX" -n online-shop get deployment adservice -o yaml
+kubectl --context "$CTX" -n online-shop get service adservice -o yaml
+kubectl --context "$CTX" -n online-shop rollout history deployment/adservice
+```
+
+Review the actual container ports, health probes, Deployment manager/annotations and image, and reconcile the *source manifest that owns the existing deployment* before applying a single-service remediation. Do not declare CAP04-003 fully compliant/reproducible or merge PR #3 before resolving/documenting this deviation; also keep CAP04-004 non-disruptive experiments separate.
+
+## EKS adservice image correction — verified (24 October 2026)
+
+The operator verified `Deployment/adservice` in existing EKS namespace `online-shop` was incorrectly running `gcr.io/google-samples/microservices-demo/shippingservice:v0.8.0` in container `service`. Its Service, selector and port 9555 were correct. The pinned upstream release expects `gcr.io/google-samples/microservices-demo/adservice:v0.8.0`.
+
+**Operator action (imperative, targeted):**
+```bash
+kubectl --context "$CTX" -n online-shop set image deployment/adservice \
+  service=gcr.io/google-samples/microservices-demo/adservice:v0.8.0
+kubectl --context "$CTX" -n online-shop rollout status deployment/adservice --timeout=180s
+```
+
+**Observed:** Successful rollout; image corrected to `adservice:v0.8.0`; new Pod `adservice-5cb44cd5db-nxmhl` `1/1 Running`, zero restarts; revision history contains 1 and 2; frontend still returned HTTP 200 via existing port-forward on `127.0.0.1:18081`. An attempted second port-forward on the occupied 18081 failed, but the first forward appeared still active. The observed HTTP 200 does not independently validate advertisement rendering or business gRPC response.
+
+**Outstanding:** Identify and update the original Git-managed source of truth for the **pre-existing** EKS deployment; `kubectl set image` does not repair any stale client-side last-applied configuration. Review potential advertisement rendering/response. The CAP04 repository's upstream pinned manifest was already correct; do not edit it or blindly apply all resources. Preserve deliberate EKS differences (11 vs 12 Deployments, absent loadgenerator, NodePort and existing cloud LoadBalancer).
+
+## Adservice post-fix functional evidence — 24 October 2026
+
+After replacing the incorrect image of `Deployment/adservice` with `gcr.io/google-samples/microservices-demo/adservice:v0.8.0`, the operator confirmed:
+
+- All **11/11** existing EKS `online-shop` Deployments `1/1 Ready` and their Pods `1/1 Running` with zero restarts at observation time.
+- Corrected Adservice Pod `adservice-5cb44cd5db-nxmhl` healthy with zero restarts.
+- Application logs explicitly state `Ad Service started, listening on 9555` and contain **two received ad gRPC requests** (`received ad request (context_words=[])`). This demonstrates request delivery but does not on its own establish browser advertisement rendering.
+- Log warnings about missing Google default credentials and temporarily unavailable Cloud Profiling/tracing/statistics are observed nonfatal integration warnings in this AWS EKS environment. No Google Cloud credentials should be introduced solely to suppress warnings in the bootcamp lab.
+- Frontend returned HTTP 200 following the image repair, as recorded in the preceding validation.
+
+**Residual source-of-truth risk:** The fix was applied imperatively with `kubectl set image`; the authoritative manifest originally used to create the pre-existing EKS Deployment has not been identified or updated. The CAP04 pinned upstream release is already correct, but may not be the file previously applied to EKS. Do not claim EKS deployment fully reproducible from this repository, or merge on that assumption, until the original manifest provenance and intended EKS-specific differences are reviewed.
