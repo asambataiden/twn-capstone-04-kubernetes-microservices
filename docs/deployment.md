@@ -315,3 +315,15 @@ kubectl --context "$CTX" -n online-shop rollout status deployment/adservice --ti
 **Observed:** Successful rollout; image corrected to `adservice:v0.8.0`; new Pod `adservice-5cb44cd5db-nxmhl` `1/1 Running`, zero restarts; revision history contains 1 and 2; frontend still returned HTTP 200 via existing port-forward on `127.0.0.1:18081`. An attempted second port-forward on the occupied 18081 failed, but the first forward appeared still active. The observed HTTP 200 does not independently validate advertisement rendering or business gRPC response.
 
 **Outstanding:** Identify and update the original Git-managed source of truth for the **pre-existing** EKS deployment; `kubectl set image` does not repair any stale client-side last-applied configuration. Review potential advertisement rendering/response. The CAP04 repository's upstream pinned manifest was already correct; do not edit it or blindly apply all resources. Preserve deliberate EKS differences (11 vs 12 Deployments, absent loadgenerator, NodePort and existing cloud LoadBalancer).
+
+## Adservice post-fix functional evidence — 24 October 2026
+
+After replacing the incorrect image of `Deployment/adservice` with `gcr.io/google-samples/microservices-demo/adservice:v0.8.0`, the operator confirmed:
+
+- All **11/11** existing EKS `online-shop` Deployments `1/1 Ready` and their Pods `1/1 Running` with zero restarts at observation time.
+- Corrected Adservice Pod `adservice-5cb44cd5db-nxmhl` healthy with zero restarts.
+- Application logs explicitly state `Ad Service started, listening on 9555` and contain **two received ad gRPC requests** (`received ad request (context_words=[])`). This demonstrates request delivery but does not on its own establish browser advertisement rendering.
+- Log warnings about missing Google default credentials and temporarily unavailable Cloud Profiling/tracing/statistics are observed nonfatal integration warnings in this AWS EKS environment. No Google Cloud credentials should be introduced solely to suppress warnings in the bootcamp lab.
+- Frontend returned HTTP 200 following the image repair, as recorded in the preceding validation.
+
+**Residual source-of-truth risk:** The fix was applied imperatively with `kubectl set image`; the authoritative manifest originally used to create the pre-existing EKS Deployment has not been identified or updated. The CAP04 pinned upstream release is already correct, but may not be the file previously applied to EKS. Do not claim EKS deployment fully reproducible from this repository, or merge on that assumption, until the original manifest provenance and intended EKS-specific differences are reviewed.
