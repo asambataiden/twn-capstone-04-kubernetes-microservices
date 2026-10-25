@@ -43,6 +43,10 @@ flowchart LR
 
 An incorrect live `adservice` image was corrected and validated. Its stale client-side last-applied data remained unresolved at inspection time; **do not apply the full upstream release to the existing EKS namespace**.
 
+## Badge submission Q&A
+
+[**Capstone 04 — TWN submission questions, answers and GitHub evidence links**](docs/twn-capstone04-submission-qa.md). These are adaptable model answers, not a claim that the exact authenticated submission form wording has been verified.
+
 ## Project files
 
 | File | Purpose |

@@ -1,7 +1,11 @@
 # CAP04 — TechWorld with Nana Submission Readiness
 
 **Checked:** 24 October 2026  
-**Status:** GitHub project portfolio complete; course-specific validation details and submission outcome remain **unverified**.
+**Status:** Three-node LKE Lesson 22 exercise and browser workflow completed on 2026-10-25; cluster deleted and GitHub documentation merged. Official TWN acceptance and the exact badge-form wording remain **unverified**. See [up-to-date submission Q&A](twn-capstone04-submission-qa.md).
+
+## October 25 LKE update
+
+The earlier comparisons below were written **before** the completed LKE reproduction. The project now includes three Ready LKE workers, 11 Deployments and 11 internal ClusterIP Services, successful rollouts, HTTP 200, and manually confirmed catalogue/cart/simulated checkout. The LKE lab has been deleted. The authoring-specific checklist item remains partial because manifests were derived from a pinned upstream release. For current evidence and ready-to-adapt answers, use [Capstone 04 submission Q&A](twn-capstone04-submission-qa.md) and [the LKE evidence](../evidence/lke-lesson22-2026-10-25.md).
 
 ## 1. Source distinction: public course information vs private assignment
 
