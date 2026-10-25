@@ -87,6 +87,22 @@ https://github.com/asambataiden/twn-capstone-04-kubernetes-microservices/blob/ma
 
 **Answer:** I completed and documented a functional reproduction of the main Module 10 Lesson 22 demonstration on a three-node LKE cluster. The original TWN lesson checklist refers to authoring 11 Deployment/Service manifests; my implementation used a filtered, pinned upstream release instead, so that *specific authoring step* should be regarded as partially aligned. Lesson 23's full production/security hardening and subsequent Helm/Helmfile lessons are separate exercises and are not claimed here. Official instructor validation and badge acceptance have not yet been confirmed.
 
+### Q12. What did I learn from this project?
+
+**Answer (ready for TWN submission):**
+
+Through this project, I gained hands-on experience deploying and validating a real microservices application on a managed Kubernetes platform. I learned how to provision a three-worker-node Linode Kubernetes Engine (LKE) cluster, connect to it securely with an isolated kubeconfig, and organize application workloads in a dedicated namespace.
+
+I improved my understanding of how Kubernetes **Deployments, Pods, Services and cluster networking** work together. I deployed 11 Online Boutique components and their internal ClusterIP Services, checked each Deployment rollout, and verified communication through a working catalogue, shopping cart and simulated checkout. I learned why Kubernetes resource creation alone is not enough: all Pods must become Ready and the application must actually work for users.
+
+I also learned to troubleshoot practical deployment problems. A newly created LKE cluster can temporarily return HTTP 503 when its kubeconfig is not yet available; on macOS I needed portable credential decoding. I recognized that a local HTTP 302 to `/login` came from another service occupying port 8080, changed the port-forward to 18080, and obtained HTTP 200 from the correct frontend. I observed startup restarts in two Pods and learned to check their subsequent readiness and stability instead of treating initial restarts as automatic failure. Earlier local k3d work also showed me why container-image **CPU architecture compatibility** matters on Apple Silicon versus AMD64 cloud nodes.
+
+From a DevOps perspective, I learned the value of **reproducible, version-controlled automation**, pinning external source revisions, verifying the exact cluster target, running Kubernetes server-side dry-runs, documenting real validation evidence, and using explicit confirmations for destructive or billable actions. I also practiced cloud cost management by avoiding an unnecessary external LoadBalancer and deleting the temporary LKE cluster after testing.
+
+Most importantly, I learned to distinguish between **a successful Kubernetes rollout, a functioning application, and a production-ready platform**. This project demonstrates the first two; it does not claim completion of the separate Lesson 23 production-hardening checklist or official TWN acceptance.
+
+**Short answer (for smaller form fields):** I learned to provision and manage a 3-node LKE cluster, deploy and validate 11 Kubernetes microservices with internal Services, troubleshoot kubeconfig and local port-forward issues, verify an end-to-end shopping workflow, and automate deployment and cleanup safely using Git-controlled scripts and Kubernetes dry-runs. The project strengthened my practical understanding of Kubernetes networking, Pod readiness, reproducibility, troubleshooting and cloud cost control.
+
 ---
 
 ## Short project description (recommended for a single free-text field)
