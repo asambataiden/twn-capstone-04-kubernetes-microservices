@@ -40,18 +40,25 @@ create() {
   printf 'Cluster creation requested. When ready, run: bash scripts/capstone04-lke.sh kubeconfig\n'
 }
 get_kubeconfig() {
-  require linode-cli; require jq; require base64; require kubectl
-  local id encoded temporary
+  require linode-cli; require jq; require kubectl
+  local id payload temporary
   id="$(cluster_id)"
   [[ -n "$id" ]] || die "Exactly one matching cluster is required"
   mkdir -p "${HOME}/.kube"
   chmod 700 "${HOME}/.kube"
   [[ ! -e "$KUBECONFIG_FILE" ]] || die "Kubeconfig already exists; refusing to overwrite: $KUBECONFIG_FILE"
+  # A new LKE cluster can return HTTP 503 until credentials are provisioned.
+  # Do not echo the API response: kubeconfig contains sensitive credentials.
+  if ! payload="$(linode-cli lke kubeconfig-view "$id" --json 2>/dev/null)"; then
+    die "Kubeconfig not available yet (LKE can take several minutes). Retry this subcommand; do not recreate the cluster"
+  fi
   temporary="$(mktemp "${HOME}/.kube/.cap04-kubeconfig.XXXXXX")"
   chmod 600 "$temporary"
   trap 'rm -f "$temporary"' EXIT
-  encoded="$(linode-cli lke kubeconfig-view "$id" --json | jq -er '.[0].kubeconfig')"
-  printf '%s' "$encoded" | base64 --decode > "$temporary" || die "Failed to decode kubeconfig"
+  # jq decodes base64 portably on macOS and Linux; never print the credentials.
+  if ! printf '%s' "$payload" | jq -er '.[0].kubeconfig | @base64d' > "$temporary"; then
+    die "Invalid or unavailable kubeconfig response"
+  fi
   KUBECONFIG="$temporary" kubectl config view -o json | jq -e '.clusters | length > 0' >/dev/null || die "Invalid kubeconfig"
   mv "$temporary" "$KUBECONFIG_FILE"
   trap - EXIT
