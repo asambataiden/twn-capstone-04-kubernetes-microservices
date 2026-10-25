@@ -1,64 +1,55 @@
-# CAP04-001 — Architecture Baseline
+# Architecture — Capstone 04
 
-## Architecture scope
+## Purpose
 
-**Existing application:** Online Boutique from the user-maintained reference repository. **Planned capstone solution:** deploy it to Kubernetes and validate routing, service discovery, reliability and business flow. No live cluster has been configured as part of CAP04-001.
+Run the existing Online Boutique application on Kubernetes and verify service discovery, frontend access and e-commerce workflows. This is a **deployment project**, not a microservices rewrite.
 
-## System context
-
-```mermaid
-flowchart LR
-    U[Browser / tester] -->|HTTP| ACCESS[Port forward or chosen ingress]
-    ACCESS --> FE[Frontend Kubernetes Service]
-    FE --> FEP[Frontend Pod]
-    FEP --> CAT[Product Catalog]
-    FEP --> CUR[Currency Service]
-    FEP --> REC[Recommendation Service]
-    FEP --> ADS[Ad Service]
-    FEP --> CART[Cart Service]
-    CART --> REDIS[(Redis Cart)]
-    FEP --> CHECK[Checkout Service]
-    CHECK --> PAY[Mock Payment]
-    CHECK --> SHIP[Mock Shipping]
-    CHECK --> EMAIL[Mock Email]
-    CHECK --> CART
-    CHECK --> CAT
-    CHECK --> CUR
-    LOAD[Optional Load Generator] --> FE
-```
-
-This diagram is a logical communication view; actual relationships should be verified from the deployed configuration and service-level instrumentation. Service names shown are the existing app responsibilities rather than a newly designed set of components.
-
-## Deployment architecture
+## Logical application architecture
 
 ```mermaid
 flowchart TB
-    REF[Existing GitHub Online Boutique source] --> ART[Upstream versioned release manifests]
-    ART --> KUBECTL[kubectl apply / planned reproducible deployment]
-    KUBECTL --> NS[Kubernetes namespace]
-    NS --> DEP[Deployments and Pods]
-    NS --> SVC[ClusterIP Services]
-    NS --> REDIS[Redis Pod + emptyDir]
-    TEST[Operator validation] -->|kubectl + browser| NS
+    Browser[Web browser] --> Entry[Frontend access]
+    Entry --> Frontend[Frontend]
+    Frontend --> Catalog[Product catalog]
+    Frontend --> Recommendation[Recommendation]
+    Frontend --> Currency[Currency]
+    Frontend --> Ads[Ad service]
+    Frontend --> Cart[Cart service]
+    Cart --> Redis[(Redis cart)]
+    Frontend --> Checkout[Checkout]
+    Checkout --> Payment[Mock payment]
+    Checkout --> Shipping[Mock shipping]
+    Checkout --> Email[Mock email]
 ```
 
-## Key choices
+Each workload is reached by Kubernetes Service DNS; backend Services are internal ClusterIP. The diagram summarizes primary logical interactions, not an exhaustive distributed trace.
 
-**Use existing contracts.** Do not change applications or gRPC contracts unless a demonstrated fault requires it.
+## Deployment environments
 
-**Keep service traffic internal.** Backend Services remain `ClusterIP`. Limit frontend exposure to the chosen entry point.
+```mermaid
+flowchart LR
+    Source[Pinned upstream release manifests] --> Local[k3d: online-boutique]
+    Operator[Operator browser and kubectl] --> EKS[Existing EKS: online-shop]
+    Local --> Pods1[Reference workloads on ARM64]
+    EKS --> Pods2[11 workloads on two AMD64 nodes]
+```
 
-**Respect existing health/resource controls.** The checked-in manifests already have resource requests/limits and probes. Do not duplicate or overwrite without reason.
+| Environment | Method | Outcome |
+|---|---|---|
+| Local k3d | Pinned release fetched, validated and applied through `capstone04-deploy.sh` | Resources applied; cartservice ARM64 failure prevented checkout |
+| Pre-existing EKS | Read-only inventory, manual browser test, and one targeted Adservice fix | 11 available Deployments; catalog/cart/mock checkout verified |
 
-**Do not confuse demonstration with persistence.** Redis uses `emptyDir` in the observed manifest and is not durable across Pod replacement.
+**No capstone EKS provisioning pipeline is claimed.** The original EKS manifests have not been traced to an authoritative repository. The upstream release defines 12 Deployments, but EKS runs 11 (no loadgenerator).
 
-**Preserve provenance.** The release manifest is generated and should not be edited. A project-specific Kustomize overlay (only if necessary) or a documented Helm values file can capture intended environment changes.
+## Design boundaries
 
-**Cloud agnostic by default.** `kind` makes local validation inexpensive; managed Kubernetes is an explicit later decision dependent on TWN assessment requirements.
+- **Runtime separation:** local deployment scripts require the exact k3d context; EKS inventory script is read-only.
+- **Network:** internal backend Services; a frontend LoadBalancer already exists in EKS. A separate NodePort Service also exists and requires its own security review.
+- **Data:** Redis cart storage in the reference setup is ephemeral; no persistence or HA claim.
+- **Reliability:** the project separately verified ReplicaSet self-healing and rolling update/rollback using disposable Deployments, not live storefront production traffic.
+- **Security:** production-hardening controls from Lesson 23 were audited but **not fully implemented**; they are not represented as completed.
+- **Reconciliation:** the EKS Adservice live image was repaired; original source of truth and last-applied state remain an exception.
 
-## Failure and rollback boundaries
+## Evidence
 
-- Losing a stateless application Pod is expected to trigger Kubernetes Deployment reconciliation; verify readiness before claiming recovery.
-- Redis replacement may lose in-memory cart data; do not include it in a “no data loss” recovery test.
-- Rollback is an optional extension with defined commands and expected result; not yet implemented.
-- The initial baseline does not claim high availability, TLS public exposure, network-policy isolation or production security compliance.
+[Deployment tests](deployment.md) · [Acceptance matrix](portfolio-evidence.md) · [TWN checklist gaps](module10-official-checklist-gap-analysis.md) · [Closure](capstone04-closure.md).
