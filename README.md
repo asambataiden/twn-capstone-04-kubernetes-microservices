@@ -1,6 +1,6 @@
 # Capstone 04 — Deploy Microservices Application in Kubernetes
 
-**TechWorld with Nana · Module 10 · Engineering portfolio closed (24 October 2026)**
+**TechWorld with Nana · Module 10 · LKE Lesson 22 verified and cleaned up (25 October 2026)**
 
 ## Objective
 
@@ -21,6 +21,8 @@ flowchart LR
 
 ## Implementation
 
+- **Dedicated Linode LKE (Lesson 22):** Created a three-worker-node Kubernetes v1.35.9 cluster, deployed 11 Online Boutique Deployments and 11 internal ClusterIP Services to `online-shop` from pinned source, verified all rollouts and frontend HTTP 200, and manually confirmed catalog, product details, cart and simulated checkout. **The lab was deleted after verification**; cluster, NodeBalancer and volume lists were empty at operator check. See [LKE evidence](evidence/lke-lesson22-2026-10-25.md) and [LKE runbook](docs/lke-lab.md).
+
 - **Local deployment:** a context-guarded k3d script fetches the pinned Online Boutique v0.8.0 Kubernetes release, validates manifests and applies them in `online-boutique`.
 - **Existing AWS EKS environment:** Online Boutique was observed in namespace `online-shop` on two AMD64 nodes; 11 application Deployments available. This cluster **was not created or deployed by the CAP04 script**.
 - **Networking:** 10 backend ClusterIP Services; existing frontend NodePort and LoadBalancer Services.
@@ -32,9 +34,10 @@ flowchart LR
 |---|---|
 | Local Kubernetes resources applied | Pass |
 | Local shopping flow on Apple Silicon ARM64 | **Fail** — upstream v0.8.0 cartservice image incompatibility |
+| Dedicated LKE Lesson 22 (3 nodes, 11 deployments/services, frontend shopping workflow) | **Pass (operator-observed)**; cluster subsequently destroyed |
 | Existing EKS application and browser workflow | Pass (operator-observed) |
 | Kubernetes self-healing / rollback lab | Pass; temporary workloads removed |
-| Exact TWN example parity | **Partial** — TWN checklist asks for authored manifests and three worker nodes; existing EKS has two |
+| Exact TWN example parity | **Partial** — three workers and 11 services verified on LKE; deployment uses filtered pinned upstream YAML rather than 11 independently authored manifest files |
 | Reproducible EKS source and deployment | **Open** — original EKS configuration owner/source not identified |
 | TWN acceptance | Not verified |
 
@@ -46,6 +49,7 @@ An incorrect live `adservice` image was corrected and validated. Its stale clien
 |---|---|
 | [Architecture](docs/architecture.md) | System and deployment context |
 | [Deployment evidence](docs/deployment.md) | Local run, incident, EKS tests |
+| [LKE Lesson 22 evidence](evidence/lke-lesson22-2026-10-25.md) | 3-worker LKE, 11 service rollouts, browser acceptance and teardown |
 | [Portfolio evidence](docs/portfolio-evidence.md) | Acceptance checks |
 | [Official checklist comparison](docs/module10-official-checklist-gap-analysis.md) | Scope deviations from TWN materials |
 | [Final report](docs/final-submission-report.md) | Consolidated evidence and limitations |
