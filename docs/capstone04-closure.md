@@ -1,6 +1,6 @@
 # CAP04 — Engineering Portfolio Closure
 
-**Date:** 24 October 2026  
+**Updated:** 25 October 2026  
 **Disposition:** **Closed as an engineering portfolio project; not yet officially accepted by TWN.**
 
 ## Scope concluded
@@ -8,6 +8,12 @@
 CAP04 documents the Kubernetes deployment of an existing Online Boutique microservices application, using upstream release manifests in a dedicated local k3d environment, and operational/functional validation of a **pre-existing** AWS EKS installation. Self-healing and rolling update/rollback were demonstrated on separate disposable workloads, which were cleaned up.
 
 All five internal engineering milestones, CAP04-001 through CAP04-005, have been merged. The repository includes architecture, requirements, safe operational scripts, deployment evidence, incident notes, portfolio evidence, lessons learned, and a final submission report.
+
+## LKE Lesson 22 reproduction — 2026-10-25
+
+Following the initial engineering closeout, the operator created a dedicated **three-worker Linode LKE** cluster (ID `676998`), deployed **11** Online Boutique application Deployments and **11** internal ClusterIP Services from a pinned version of the upstream release (excluding optional loadgenerator and public LoadBalancer), verified all Deployments Ready and local port-forward HTTP 200, and manually verified catalogue, details, cart and mock checkout. The lab was then deleted; operator queries returned `[]` for remaining LKE clusters, NodeBalancers and volumes. See [LKE evidence](../evidence/lke-lesson22-2026-10-25.md).
+
+This resolves the earlier three-worker-node demonstration gap using LKE. The source was a filtered pinned upstream release, not an independently authored set of 11 manifest files. The earlier EKS and local k3d distinctions remain historically accurate; Lesson 23 hardening and official TWN acceptance are not claimed.
 
 ## Demonstrated outcomes
 
@@ -22,7 +28,7 @@ All five internal engineering milestones, CAP04-001 through CAP04-005, have been
 
 These issues do not prevent **portfolio** closure but must not be disguised as passing the exact TWN demonstration:
 
-1. Official TWN Module 10 checklist page 12 specifies a three-worker-node cloud cluster and eleven authored Deployment/Service manifests. The pre-existing EKS cluster has two worker nodes and its original declarative source is not yet located. The pinned original reference manifest has twelve Deployments/Services, while current EKS has eleven Deployments and no loadgenerator.
+1. The TWN three-worker-node cloud deployment has now been reproduced successfully on LKE. The checklist's independently authored manifest aspect is still only partial because the LKE implementation filters a pinned upstream file. The separate existing EKS cluster has two workers and its original declarative source remains unidentified.
 2. Local ARM64 cartservice release could not complete the shopping flow. Successful functionality was independently observed in the pre-existing AMD64 EKS environment; this does not prove that the capstone's deployment script created that EKS installation.
 3. Current live EKS `adservice` was repaired, but its earlier last-applied metadata still included the wrong image; its authoritative source manifest needs reconciliation **before any future EKS apply**.
 4. TWN Lesson 23's hardening checklist was audited but **not implemented** as part of CAP04; it is separate learning scope. Later Helm/Helmfile lesson work is likewise not part of this closeout.
