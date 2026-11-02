@@ -12,10 +12,10 @@ This short summary provides a reviewer entry point; the main README and linked p
 
 ## Reviewer navigation
 
-- [`README.md`](../../README.md)
-- [`docs/twn-capstone04-submission-qa.md`](../../docs/twn-capstone04-submission-qa.md)
-- [`docs/final-submission-report.md`](../../docs/final-submission-report.md)
-- [`evidence/lke-lesson22-2026-10-25.md`](../../evidence/lke-lesson22-2026-10-25.md)
+- [`README.md`](../README.md)
+- [`docs/twn-capstone04-submission-qa.md`](../docs/twn-capstone04-submission-qa.md)
+- [`docs/final-submission-report.md`](../docs/final-submission-report.md)
+- [`evidence/lke-lesson22-2026-10-25.md`](../evidence/lke-lesson22-2026-10-25.md)
 
 ## Verification qualification
 
