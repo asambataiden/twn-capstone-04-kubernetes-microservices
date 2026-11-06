@@ -64,4 +64,4 @@ An incorrect live `adservice` image was corrected and validated. Its stale clien
 
 **Reference application:** [Online Boutique study repo](https://github.com/asambataiden/twn-devops-bootcamp-10-kubernetes-deploying-microservices-demo).
 
-**TWN submission:** Link to [`main`](https://github.com/asambataiden/twn-capstone-04-kubernetes-microservices/tree/main) only after reviewer access and repository security review are resolved.
+**Reviewer access:** The [`main` branch](https://github.com/asambataiden/twn-capstone-04-kubernetes-microservices/tree/main) is public. Git history was screened using Gitleaks with no findings; badge validation and official acceptance are separate.
